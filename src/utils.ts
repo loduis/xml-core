@@ -8,22 +8,20 @@ let xpath: SelectNodes = (node: Node, xPath: string) => {
 };
 
 // Fix global
-let sWindow: any;
 if (typeof self === "undefined") {
-    sWindow = global;
     const xmldom = require("xmldom-alpha");
     xpath = require("xpath.js");
-    sWindow.XMLSerializer = xmldom.XMLSerializer;
-    sWindow.DOMParser = xmldom.DOMParser;
-    sWindow.DOMImplementation = xmldom.DOMImplementation;
-    sWindow.document = new DOMImplementation().createDocument("http://www.w3.org/1999/xhtml", "html", null!);
-} else {
-    sWindow = self;
+    global.XMLSerializer = xmldom.XMLSerializer;
+    global.DOMParser = xmldom.DOMParser;
+    global.DOMImplementation = xmldom.DOMImplementation;
+    global.document = new DOMImplementation().createDocument("http://www.w3.org/1999/xhtml", "html", null!);
 }
 
 function SelectNodesEx(node: Node, xPath: string): Node[] {
-    const doc: Document = node.ownerDocument == null ? node as Document : node.ownerDocument;
-    const nsResolver = document.createNSResolver(node.ownerDocument == null ? (node as Document).documentElement : node.ownerDocument.documentElement);
+    const doc =  node.ownerDocument === null ? node as Document : node.ownerDocument;
+    const resolvers: any[] = [];
+    resolvers.push(document.createNSResolver(node));
+    resolvers.push(document.createNSResolver(node.ownerDocument === null ? (node as Document).documentElement : node.ownerDocument.documentElement));
     const personIterator = doc.evaluate(xPath, node, nsResolver, XPathResult.ANY_TYPE, null!);
     const ns: Node[] = [];
     let n: Node | null;
@@ -31,6 +29,15 @@ function SelectNodesEx(node: Node, xPath: string): Node[] {
         ns.push(n);
     }
     return ns;
+    function nsResolver(prefix: string | null): string | null {
+        let value;
+        for (const res of resolvers) {
+            if ((value = res.lookupNamespaceURI(prefix)) !== null) {
+                return value;
+            }
+        }
+        return null;
+    }
 }
 
 export const Select: SelectNodes = (typeof self !== "undefined") ? SelectNodesEx : xpath;
