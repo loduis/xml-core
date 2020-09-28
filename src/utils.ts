@@ -9,7 +9,7 @@ let xpath: SelectNodes = (node: Node, xPath: string) => {
 
 // Fix global
 if (typeof self === "undefined") {
-    const xmldom = require("xmldom-alpha");
+    const xmldom = require("xmldom");
     xpath = require("xpath.js");
     global.XMLSerializer = xmldom.XMLSerializer;
     global.DOMParser = xmldom.DOMParser;
